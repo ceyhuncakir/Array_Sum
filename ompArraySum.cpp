@@ -4,22 +4,24 @@
 #include <chrono>
 
 void readArray(char *fileName, double **a, int *n);
-double sumArray(double *a, int numValues);
+double sumArray(double *a, int numValues, int amount_of_threads);
 
 int main(int argc, char *argv[]) {
 
   int howMany;
   double sum;
   double *a;
+  int amount_of_threads = 8;
 
   readArray(argv[1], &a, &howMany);
 
   double start_parallel = omp_get_wtime();
-  sum = sumArray(a, howMany);
+  sum = sumArray(a, howMany, amount_of_threads);
   double end_parallel = omp_get_wtime();
 
   std::cout << "total time taken with parallel: " << (end_parallel - start_parallel) << std::endl;
-  std::cout << "total sum with parallel: " << sum;
+  std::cout << "total sum with parallel: " << sum << std::endl;
+  std::cout << "used threads:" << amount_of_threads << std::endl;
 
   free(a);
 
@@ -54,14 +56,17 @@ void readArray(char *fileName, double **a, int *n)
     *a = tempA;
 }
 
-double sumArray(double *a, int numValues)
+double sumArray(double *a, int numValues, int amount_of_threads)
 {
     int i;
     double result = 0.0;
 
-    #pragma omp parallel for reduction (+:result)
+    #pragma omp parallel for reduction (+:result) num_threads(amount_of_threads)
       for (i = 0; i < numValues; i++)
       {
+        // alleen om te debuggen of er de juiste hoeveel aantal threads geactiveerd worden
+        //int tid = omp_get_thread_num();
+        //printf("Hello world from omp thread %d\n", tid);
         result += a[i];
       }
 
